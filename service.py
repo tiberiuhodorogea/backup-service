@@ -55,11 +55,22 @@ class BackupService(win32serviceutil.ServiceFramework):
     def main(self):
         os.chdir(SERVICE_DIR)
 
+        import asyncio
+        import contextlib
         import uvicorn
         from main import app  # noqa: F811
 
-        config = uvicorn.Config(app, host="0.0.0.0", port=8550, log_level="info")
+        # Windows Service SvcDoRun() runs in a non-main thread, which hits two
+        # restrictions:
+        # 1. ProactorEventLoop.__init__ calls set_wakeup_fd() — main thread only.
+        #    Fix: use SelectorEventLoop policy instead.
+        # 2. uvicorn.Server.capture_signals calls signal.signal() — main thread only.
+        #    Fix: replace capture_signals with a no-op context manager on the instance.
+        asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
+
+        config = uvicorn.Config(app, host="0.0.0.0", port=8550, log_level="info", log_config=None)
         self.server = uvicorn.Server(config)
+        self.server.capture_signals = contextlib.nullcontext
         self.server.run()
 
 
