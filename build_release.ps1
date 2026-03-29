@@ -376,6 +376,14 @@ TROUBLESHOOT
 "@
 $instructions | Set-Content (Join-Path $RELEASE "instructions.txt") -Encoding ASCII
 
+# ---- Zip the release --------------------------------------------------------
+$ZIP_PATH = Join-Path $ROOT "backup-service-release.zip"
+Write-Host "Zipping release..."
+if (Test-Path $ZIP_PATH) { Remove-Item $ZIP_PATH -Force }
+Compress-Archive -Path "$RELEASE\*" -DestinationPath $ZIP_PATH
+$zipMB = [math]::Round((Get-Item $ZIP_PATH).Length / 1MB, 1)
+Write-Host "       $ZIP_PATH ($zipMB MB)"
+
 # ---- Summary ----------------------------------------------------------------
 $sizeMB = [math]::Round(
     (Get-ChildItem $RELEASE -Recurse -File | Measure-Object -Property Length -Sum).Sum / 1MB, 1
@@ -385,11 +393,11 @@ Write-Host ""
 Write-Host "================================================================" -ForegroundColor Green
 Write-Host "  BUILD COMPLETE" -ForegroundColor Green
 Write-Host "================================================================" -ForegroundColor Green
-Write-Host "  Release : $RELEASE"
-Write-Host "  Size    : $sizeMB MB"
+Write-Host "  Release folder : $RELEASE ($sizeMB MB)"
+Write-Host "  Release zip    : $ZIP_PATH ($zipMB MB)"
 Write-Host ""
 Write-Host "  NEXT STEPS:"
-Write-Host "    1. Copy the Release\ folder to a USB stick."
+Write-Host "    1. Copy Release\ or the .zip to a USB stick."
 Write-Host "    2. On the target machine:"
 Write-Host "       Right-click install.bat -> Run as administrator"
 Write-Host "    3. Open a browser to http://localhost:8550"
