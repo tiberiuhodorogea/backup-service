@@ -130,8 +130,7 @@ async def browse_folder(path: str = ""):
     if not os.path.isdir(path):
         return {"path": path, "parent": None, "entries": []}
 
-    p = Path(path)
-    parent = str(p.parent)
+    parent = str(Path(path).parent)
     if parent == path:
         parent = ""
 

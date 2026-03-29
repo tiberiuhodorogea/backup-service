@@ -141,51 +141,73 @@ async function loadSources()  { renderPathList(await api('GET', '/api/sources'),
 async function loadDests()    { renderPathList(await api('GET', '/api/destinations'),  'dest-list',   'dst'); }
 
 /* ── Folder browser modal ──────────────────────────── */
-let _browseTarget = null;   // input element that will receive the chosen path
-let _browseCurrent = '';    // currently displayed path
+let _browseTarget  = null;
+let _browseCurrent = '';
 
-function openBrowseModal(targetId) {
+window.browseSource = () => _openBrowse('src-path');
+window.browseDest   = () => _openBrowse('dst-path');
+
+function _openBrowse(targetId) {
   _browseTarget = document.getElementById(targetId);
-  document.getElementById('browse-overlay').classList.add('open');
-  document.getElementById('browse-modal').classList.add('open');
-  const seed = (_browseTarget && _browseTarget.value.trim()) || '';
-  browseTo(seed);
+  const seed = _browseTarget.value.trim();
+  _showBrowseModal(true);
+  _browseTo(seed);
 }
 
-function closeBrowseModal() {
-  document.getElementById('browse-overlay').classList.remove('open');
-  document.getElementById('browse-modal').classList.remove('open');
+function _showBrowseModal(visible) {
+  document.getElementById('browse-overlay').style.display = visible ? 'block' : 'none';
+  document.getElementById('browse-modal').style.display   = visible ? 'flex'  : 'none';
 }
 
-function confirmBrowse() {
+window.closeBrowseModal = () => _showBrowseModal(false);
+
+window.confirmBrowse = function() {
   if (_browseTarget && _browseCurrent) _browseTarget.value = _browseCurrent;
-  closeBrowseModal();
-}
+  _showBrowseModal(false);
+};
 
-async function browseTo(path) {
+async function _browseTo(path) {
   const url = '/api/browse' + (path ? '?path=' + encodeURIComponent(path) : '');
-  const res = await fetch(url).then(r => r.json());
+  const res  = await fetch(url).then(r => r.json());
   _browseCurrent = res.path;
 
-  const pathEl = document.getElementById('browse-path');
-  const listEl = document.getElementById('browse-list');
+  document.getElementById('browse-path').textContent = res.path || 'Select a drive';
 
-  pathEl.textContent = res.path || 'Select a drive';
+  const list = document.getElementById('browse-list');
+  list.innerHTML = '';
 
-  const items = [];
   if (res.parent !== null && res.parent !== undefined) {
-    items.push(`<li class="browse-item browse-up" onclick="browseTo(${JSON.stringify(res.parent)})">..</li>`);
+    const li = document.createElement('li');
+    li.className = 'browse-item browse-up';
+    li.textContent = '↑ ..';
+    li.dataset.path = res.parent;
+    list.appendChild(li);
   }
-  items.push(...(res.entries || []).map(e =>
-    `<li class="browse-item" onclick="browseTo(${JSON.stringify(e.path)})">${esc(e.name)}</li>`
-  ));
-  listEl.innerHTML = items.join('') || '<li class="empty-msg" style="padding:.75rem">No subfolders</li>';
+
+  if (!res.entries || res.entries.length === 0) {
+    const li = document.createElement('li');
+    li.className = 'empty-msg';
+    li.style.padding = '.75rem';
+    li.textContent = 'No subfolders';
+    list.appendChild(li);
+  } else {
+    res.entries.forEach(e => {
+      const li = document.createElement('li');
+      li.className = 'browse-item';
+      li.textContent = e.name;
+      li.dataset.path = e.path;
+      list.appendChild(li);
+    });
+  }
 }
 
-function browseSource() { openBrowseModal('src-path'); }
-function browseDest()   { openBrowseModal('dst-path'); }
-window.browseSource = browseSource;
-window.browseDest   = browseDest;
+// Single delegated listener — no inline onclick, no escaping issues
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('browse-list').addEventListener('click', e => {
+    const li = e.target.closest('.browse-item');
+    if (li && li.dataset.path !== undefined) _browseTo(li.dataset.path);
+  });
+});
 
 async function addSource() {
   const path = document.getElementById('src-path').value.trim();

@@ -172,21 +172,20 @@
     </div><!-- /layout -->
   </main>
 
-  <!-- ── Folder browser modal ────────────────────────── -->
-  <div id="browse-overlay" class="browse-overlay" onclick="closeBrowseModal()"></div>
-  <div id="browse-modal" class="browse-modal" role="dialog" aria-modal="true">
-    <div class="browse-header">
-      <span class="browse-title">Browse</span>
-      <button class="icon-btn" onclick="closeBrowseModal()" title="Close">&times;</button>
+  <div id="browse-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:100" onclick="closeBrowseModal()"></div>
+  <div id="browse-modal" style="display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:101;width:420px;max-width:94vw;max-height:70vh;flex-direction:column;background:var(--bg-card);border:1px solid var(--border-light);border-radius:var(--radius)">
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:.65rem 1rem;border-bottom:1px solid var(--border);flex-shrink:0">
+      <span style="font-size:.65rem;font-weight:700;letter-spacing:.18em;color:var(--text-muted);text-transform:uppercase">Browse</span>
+      <button class="icon-btn" onclick="closeBrowseModal()">&times;</button>
     </div>
-    <div class="browse-path" id="browse-path">&nbsp;</div>
-    <ul class="browse-list" id="browse-list"></ul>
-    <div class="browse-footer">
+    <div id="browse-path" style="padding:.45rem 1rem;font-family:var(--mono);font-size:.72rem;color:var(--text-dim);border-bottom:1px solid var(--border);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex-shrink:0">&nbsp;</div>
+    <ul id="browse-list" style="list-style:none;overflow-y:auto;flex:1;min-height:0;padding:.3rem 0;margin:0"></ul>
+    <div style="display:flex;justify-content:flex-end;gap:.5rem;padding:.65rem 1rem;border-top:1px solid var(--border);flex-shrink:0">
       <button class="btn btn-sm btn-muted" onclick="closeBrowseModal()">Cancel</button>
       <button class="btn btn-sm" onclick="confirmBrowse()">Select</button>
     </div>
   </div>
 
-  <script src="/static/app.js"></script>
+<script src="/static/app.js"></script>
 </body>
 </html>
